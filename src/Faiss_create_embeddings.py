@@ -14,7 +14,7 @@ os.environ["OPENAI_API_KEY"] = api_key
 
 # 엑셀 파일 목록 및 시트 목록
 excel_files = [
-    ("data_source/세무사데이터.xlsx", ["Sheet1"]),
+    ("data_source/세무사 데이터전처리_20250116.xlsx", ["Sheet1"]),
 ]
 
 # 모든 데이터를 하나의 리스트에 저장
