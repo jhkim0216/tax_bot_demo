@@ -2,6 +2,7 @@ import os
 import streamlit as st
 from langchain import hub
 from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_community.vectorstores import FAISS
@@ -16,6 +17,17 @@ os.environ["OPENAI_API_KEY"] = api_key
 if not api_key:
     raise ValueError("OPENAI_API_KEY가 설정되지 않았습니다. .env 파일을 확인하세요.")
 
+# 프롬프트 파일 경로 설정
+prompt_file_path = "src/prompt/prompt.txt"
+
+# 텍스트 파일을 읽어와 프롬프트 텍스트로 저장
+def load_prompt_from_file(file_path):
+    with open(file_path, "r", encoding="utf-8") as file:
+        return file.read()
+
+# 파일에서 프롬프트 텍스트 읽기
+prompt_text = load_prompt_from_file(prompt_file_path)
+
 # 임베딩 모델 생성 - text-embedding-3-small 사용
 embedding_model = OpenAIEmbeddings(model="text-embedding-3-small")
 
@@ -26,7 +38,11 @@ vectorstore = FAISS.load_local("vdb/faiss_index", embeddings=embedding_model, al
 retriever = vectorstore.as_retriever(search_type='mmr', search_kwargs={'k': 5, 'fetch_k': 10, 'lambda_mult': 0.9})
 
 # RAG 구성 요소 설정
-prompt = hub.pull("rlm/rag-prompt")
+prompt = PromptTemplate(
+    input_variables=["question", "context"],  # 필요한 입력 변수 설정
+    template=prompt_text  # 텍스트 파일에서 읽어온 프롬프트 텍스트
+)
+
 llm = ChatOpenAI(model_name="gpt-4o", temperature=0.5)
 rag_chain = (
     {"context": retriever, "question": RunnablePassthrough()}
